@@ -1,7 +1,8 @@
 -- Criando o banco
 CREATE 
 	DATABASE spotify_atividade;
-
+    
+    
 -- Utilizando o banco para realizar as operações
 USE spotify_atividade;
 
@@ -22,133 +23,145 @@ CREATE TABLE spotify_top(
 -- Ver tabela top
 SELECT * FROM spotify_atividade.spotify_top;
 
--- CONTA QUANTOS ARTISTAS  estão com valor nulo no nome.
+-- Q1 CONTA QUANTOS ARTISTAS  estão com valor nulo no nome.
 SELECT COUNT(artista) AS qtd_artistas
 FROM spotify_top
 WHERE artista IS NULL;
 
--- Contagem toral de registros na tabela
+-- Q2 Contagem total de registros na tabela
 SELECT COUNT(*) AS total_registros
 FROM spotify_top;
 
--- Contagem de quantas musicas foram top 1
+-- Q3 Contagem de quantas musicas foram top 1
 SELECT COUNT(musica) AS qtd_musicas_top1
 FROM spotify_top
 WHERE maior_posicao = 1;
 
 
-
--- 4. Qual a música que ficou por mais vezes no top 1 (Uso de Subconsulta e MAX)
-SELECT musica, vezes_maior_posicao
+-- Q4 QUAL A MÚSICA QUE FICOU MAIS VEZES NO TOP 1
+SELECT musica, COUNT(*) AS vezes_no_topo
 FROM spotify_top
-WHERE CAST(vezes_maior_posicao AS UNSIGNED) = (
-    SELECT MAX(CAST(vezes_maior_posicao AS UNSIGNED)) 
-    FROM spotify_top 
-    WHERE maior_posicao = 1
-);
+WHERE maior_posicao = 1
+GROUP BY musica
+ORDER BY vezes_no_topo DESC
+LIMIT 5;
 
--- 5. Quantos artistas diferentes há
-SELECT COUNT(DISTINCT artista) AS total_artistas_unicos
-FROM spotify_top;
+-- Q5 QUANTOS ARTISTAS DIFERENTES HÁ
+SELECT COUNT(DISTINCT artista) AS total_artista_diferente
+FROM spotify_top; 
 
--- 6. Qual música com mais streams
-SELECT musica, total_streams
-FROM spotify_top
-WHERE total_streams = (SELECT MAX(total_streams) FROM spotify_top);
-
--- 7. Qual música com maior pico de streams
-SELECT musica, pico_streams
+-- Q6 QUAL MÚSICA COM MAIS STREAMS
+SELECT posicao, artista, pico_streams 
 FROM spotify_top
 ORDER BY pico_streams DESC
 LIMIT 1;
 
--- 8. Qual artista ficou mais vezes no top 1
-SELECT artista, SUM(CAST(vezes_maior_posicao AS UNSIGNED)) AS soma_top
+
+-- Q7 QUAL MÚSICA COM MAIOR PICO TOTAL DE STREAMS
+SELECT musica, artista, total_streams
 FROM spotify_top
-WHERE maior_posicao = 1
-GROUP BY artista
-ORDER BY soma_top DESC
+ORDER BY total_streams DESC
 LIMIT 1;
 
--- 9. Qual artista possui mais registros
-SELECT artista, COUNT(*) AS registros
+
+-- Q8 Qual artista ficou mais vezes no top
+SELECT artista, COUNT(*) AS vezes_no_top1
 FROM spotify_top
+WHERE maior_posicao = 1 
 GROUP BY artista
-ORDER BY registros DESC
+ORDER BY vezes_no_top1 DESC
 LIMIT 1;
 
--- 10. Quantos artistas possuem nome iniciando com a letra “H”
-SELECT COUNT(DISTINCT artista)
+-- Q9 Qual artista possui mais registros
+SELECT artista, COUNT(*) AS mais_registro
+FROM spotify_top
+GROUP BY artista
+ORDER BY mais_registro DESC
+LIMIT 1;
+
+-- Q10 Quantos artistas começam com “H”
+SELECT COUNT(DISTINCT artista) AS artistas_com_H
 FROM spotify_top
 WHERE artista LIKE 'H%';
 
--- 11. Quais as músicas da artista “Anitta” estão na tabela
-SELECT DISTINCT musica
-FROM spotify_top
-WHERE artista = 'Anitta';
 
--- 12. Quantas músicas passaram da marca de 500 mil streams
-SELECT COUNT(*)
+-- Q11 Músicas da Anitta
+SELECT musica, artista
 FROM spotify_top
-WHERE total_streams > 500000;
+WHERE artista = 'Anitta'
+GROUP BY musica; 
 
--- 13. Qual a música no registro 3480
-SELECT musica
+-- Q12 Quantas músicas passaram de 500 mil streams
+SELECT artista, COUNT(*) AS passou_500
 FROM spotify_top
-WHERE posicao = 3480;
+WHERE pico_streams > 500000
+GROUP BY artista
+ORDER BY passou_500 DESC;
 
--- 14. Quantas músicas o artista “The Weeknd” possui e quais
-SELECT COUNT(musica) AS qtd, GROUP_CONCAT(musica) AS lista
+-- Q13 Música no registro 3480
+SELECT *
+FROM spotify_top
+LIMIT 1
+OFFSET 3479;
+
+-- Q14 Quantas músicas o artista “The Weeknd” possui e quais.
+SELECT artista, COUNT(DISTINCT musica) AS total_musicas
 FROM spotify_top
 WHERE artista = 'The Weeknd';
 
--- 15. Quantas músicas possuem “girl” no nome
-SELECT COUNT(*)
+
+
+-- Q14.1 Lista das músicas
+SELECT DISTINCT musica, artista
+FROM spotify_top
+WHERE artista = 'The Weeknd';
+
+-- Q15 Quantas músicas possuem “girl” no nome
+
+SELECT COUNT(musica) AS nome_girls
 FROM spotify_top
 WHERE musica LIKE '%girl%';
+--  --------------------
+SELECT COUNT(*)
+FROM TOP
+WHERE MUSICA LIKE '%girl%';
+-- Total de streams do Post Malone
+SELECT SUM(PICO_STREAMS) AS TOTA_PICOS , ARTISTA 
+FROM TOP
+WHERE ARTISTA = 'Post Malone';
 
--- 16. Qual o total de streams do artista “Post Malone”
-SELECT SUM(total_streams) AS total_post_malone
-FROM spotify_top
-WHERE artista = 'Post Malone';
-
--- 17. Quais são os 5 artistas com mais registros, de forma decrescente
-SELECT artista, COUNT(*) AS total
+-- Q17 Top 5 artistas com mais registros
+SELECT artista, COUNT(*) AS top_5
 FROM spotify_top
 GROUP BY artista
-ORDER BY total DESC
+ORDER BY top_5 DESC
 LIMIT 5;
 
--- 18. Qual o total de streams das 10 músicas com mais streams (Uso de Subconsulta)
-SELECT SUM(total_streams) AS soma_top10
-FROM (
-    SELECT total_streams 
-    FROM spotify_top 
-    ORDER BY total_streams DESC 
-    LIMIT 10
-) AS sub;
-
--- 19. Quais as músicas que já estiveram no top 1 e estiveram entre 40 e 60 vezes na maior posição
+-- Total de streams das 10 músicas com mais streams
+SELECT SUM(PICO_STREAMS) AS total_top10
+FROM TOP 
+ORDER BY PICO_STREAMS DESC
+LIMIT 10;
+-- Músicas que foram top 1 e ficaram entre 40 e 60 vezes
+SELECT MUSICA
+FROM TOP
+WHERE MAIOR_POSICAO = 1
+AND TOP_VEZES BETWEEN 40 AND 60;
+-- Músicas com menos de 500 mil streams e posição entre 5 e 10
 SELECT musica
 FROM spotify_top
-WHERE maior_posicao = 1 
-AND CAST(vezes_maior_posicao AS UNSIGNED) BETWEEN 40 AND 60;
+WHERE PICO_STREAMS < 500000
+AND MAIOR_POSICAO BETWEEN 5 AND 10;
 
--- 20. Quais músicas tiveram menos de 500 mil streams e ficaram entre o top 5 e 10
-SELECT musica
-FROM spotify_top
-WHERE total_streams < 500000 
-AND maior_posicao BETWEEN 5 AND 10;
-
--- 21. Qual a música com o mínimo de streams que atingiu a 1ª posição (Uso de MIN)
-SELECT musica, total_streams
-FROM spotify_top
-WHERE maior_posicao = 1 
-AND total_streams = (SELECT MIN(total_streams) FROM spotify_top WHERE maior_posicao = 1);
-
--- 22. Qual a música com o mínimo de streams da artista Taylor Swift
-SELECT musica, total_streams
-FROM spotify_top
-WHERE artista = 'Taylor Swift'
-ORDER BY total_streams ASC
+-- Música com menor streams que chegou ao top 1
+SELECT ARTISTA, MUSICA, PICO_STREAMS
+FROM TOP
+WHERE MAIOR_POSICAO = 1
+ORDER BY PICO_STREAMS ASC
+LIMIT 1;
+-- Música com menor streams da Taylor Swift
+SELECT ARTISTA, MUSICA, PICO_STREAMS AS TOTAL_VISU
+FROM TOP
+WHERE ARTISTA = 'Taylor Swift'
+ORDER BY PICO_STREAMS ASC --  MENOR = ASC 
 LIMIT 1;

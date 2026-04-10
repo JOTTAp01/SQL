@@ -135,3 +135,26 @@ SELECT *
 FROM top
 WHERE maior_posicao IS NULL;
 
+
+
+
+-- Utilizando subquerie
+-- Quais musicas tem o total de streams acima da media?
+SELECT musica, total_streams
+FROM top
+WHERE total_streams > (
+	SELECT AVG(total_streams)
+	FROM top
+);
+
+
+
+-- Musica com mais streams
+SELECT musica, total_streams
+FROM top
+WHERE total_streams = (
+	SELECT MAX(total_streams)
+    FROM top
+);
+
+
